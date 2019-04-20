@@ -1,3 +1,6 @@
 [submodule "capstone-datageneration"]
 	path = capstone-datageneration
 	url = https://github.com/antube/capstone-datageneration.git
+[submodule "capstone-compression"]
+	path = capstone-compression
+	url = https://github.com/antube/capstone-compression.git
