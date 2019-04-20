@@ -50,7 +50,7 @@
             this.select1.Name = "select1";
             this.select1.Size = new System.Drawing.Size(86, 23);
             this.select1.TabIndex = 2;
-            this.select1.Text = "Select Image 1";
+            this.select1.Text = "Select Bitmap";
             this.select1.UseVisualStyleBackColor = true;
             this.select1.Click += new System.EventHandler(this.select1_Click);
             // 
@@ -84,7 +84,7 @@
             this.select2.Name = "select2";
             this.select2.Size = new System.Drawing.Size(86, 23);
             this.select2.TabIndex = 5;
-            this.select2.Text = "Select Image 2";
+            this.select2.Text = "Select Jpeg";
             this.select2.UseVisualStyleBackColor = true;
             this.select2.Click += new System.EventHandler(this.select2_Click);
             // 
