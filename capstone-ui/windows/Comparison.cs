@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace capstone_ui.windows
 {
@@ -82,13 +83,21 @@ namespace capstone_ui.windows
             OpenFileDialog open = new OpenFileDialog();
 
             //
-            open.ShowDialog();
+            if (open.ShowDialog() == DialogResult.OK)
+            {
+                image1.path = open.FileName;
+                if (properFormats(0))
+                {
+                    //
+                    textBox2.Text = image1.path;
+                }
+                else
+                {
+                    image1.path = "";
 
-            //
-            image1.path = open.FileName;
-
-            //
-            textBox2.Text = image1.path;
+                    MessageBox.Show("Non Bitmap Inputed", "ERROR");
+                }
+            }
         }
 
         private void select2_Click(object sender, EventArgs e)
@@ -98,54 +107,82 @@ namespace capstone_ui.windows
                 OpenFileDialog open = new OpenFileDialog();
 
                 //
-                open.ShowDialog();
+                if (open.ShowDialog() == DialogResult.OK)
+                {
+                    image2.path = open.FileName;
 
-                //
-                image2.path = open.FileName;
-
-                //
-                textBox3.Text = image2.path;
+                    if (properFormats(1))
+                    {
+                        //
+                        textBox3.Text = image2.path;
+                    }
+                    else
+                    {
+                        image2.path = "";
+                        MessageBox.Show("Non Jpeg file Format", "ERROR");
+                    }
+                }
             }
             else
             {
                 Generate gen = new Generate(textBox2.Text);
 
-                gen.ShowDialog();
+                if (gen.ShowDialog() == DialogResult.OK)
+                {
+                    image2.path = gen.filePath;
+
+                    textBox3.Text = gen.filePath;
+
+                    Process process = new Process();
+
+                    process.StartInfo.FileName = "capstoneCompression.exe";
+
+                    process.StartInfo.Arguments = "";
+                }
             }
         }
 
         private void okay_Click(object sender, EventArgs e)
         {
-            image1.name = textBox4.Text;
 
-            image2.name = textBox5.Text;
-
-            if (Index == -1)
+            if (!filesValidInput())
             {
-                Form1.comparisons.Add(new nodes.Comparison { name = textBox1.Text, image1 = image1, image2 = image2 });
+                MessageBox.Show("Comparison Name Empty, Files Do Not Exist, or No Files Specified", "ERROR");
             }
             else
             {
-                bool filesDeleted = false;
 
-                if(Form1.comparisons[Index].image1 != image1 || Form1.comparisons[Index].image2 != image2)
+                image1.name = textBox4.Text;
+
+                image2.name = textBox5.Text;
+
+                if (Index == -1)
                 {
-                    File.Delete(Form1.comparisons[Index].name + ".jpg.csv");
-                    File.Delete(Form1.comparisons[Index].name + ".bmp.csv");
-                    File.Delete(Form1.comparisons[Index].name + ".bmp");
-                    filesDeleted = true;
+                    Form1.comparisons.Add(new nodes.Comparison { name = textBox1.Text, image1 = image1, image2 = image2 });
+                }
+                else
+                {
+                    bool filesDeleted = false;
+
+                    if (Form1.comparisons[Index].image1 != image1 || Form1.comparisons[Index].image2 != image2)
+                    {
+                        File.Delete(Form1.comparisons[Index].name + ".jpg.csv");
+                        File.Delete(Form1.comparisons[Index].name + ".bmp.csv");
+                        File.Delete(Form1.comparisons[Index].name + ".bmp");
+                        filesDeleted = true;
+                    }
+
+                    Form1.comparisons[Index].name = textBox1.Text;
+                    Form1.comparisons[Index].image1 = image1;
+                    Form1.comparisons[Index].image2 = image2;
+
+                    if (filesDeleted)
+                        Form1.generate_data((int)Index);
                 }
 
-                Form1.comparisons[Index].name = textBox1.Text;
-                Form1.comparisons[Index].image1 = image1;
-                Form1.comparisons[Index].image2 = image2;
-
-                if (filesDeleted)
-                    Form1.generate_data((int)Index);
+                DialogResult = DialogResult.OK;
+                Close();
             }
-
-            DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void cancel_Click(object sender, EventArgs e)
@@ -162,6 +199,24 @@ namespace capstone_ui.windows
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
             select2.Text = "Generate";
+        }
+
+        private bool properFormats(int i = 1)
+        {
+            if (i == 0)
+                return image1.path[image1.path.Length - 3] == 'b' && image1.path[image1.path.Length - 2] == 'm' && image1.path[image1.path.Length - 1] == 'p';
+            else
+                return (image2.path[image2.path.Length - 4] == 'j' && image2.path[image2.path.Length - 3] == 'p' && image2.path[image2.path.Length - 2] == 'e' && image2.path[image2.path.Length - 1] == 'g') ||
+                (image2.path[image2.path.Length - 3] == 'j' && image2.path[image2.path.Length - 2] == 'p' && image2.path[image2.path.Length - 1] == 'g');
+        }
+
+        public bool filesValidInput()
+        {
+            return (image1.path != "" && File.Exists(image1.path) &&
+                //Is image path not null                   Does file exist
+                image2.path != "" && File.Exists(image2.path) &&
+                //Is name not equal to null
+                textBox1.Text != "");
         }
     }
 }

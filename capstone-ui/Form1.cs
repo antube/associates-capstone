@@ -10,14 +10,16 @@ namespace capstone_ui
 {
     public partial class Form1 : Form
     {
-        //
+        //List of object Comparison
         public static List<nodes.Comparison> comparisons = new List<nodes.Comparison>() { };
+
 
         //
         public Form1()
         {
             InitializeComponent();
         }
+
 
         //
         private void Form1_Load(object sender, EventArgs e)
@@ -44,19 +46,8 @@ namespace capstone_ui
             c2.Y = (tabPage2.Height >> 1) - (menuStrip4.Height >> 1);
 
             chart2.Location = c2;
-
-            Point l1 = new Point();
-            l1.X = (tabPage2.Width >> 1) - (label1.Width >> 1);
-            l1.Y = 0;
-
-            label1.Location = l1;
-
-            Point l2 = new Point();
-            l2.X = (tabPage3.Width >> 1) - (label2.Width >> 1);
-            l2.Y = (tabPage3.Height >> 1) - (menuStrip4.Height >> 1);
-
-            label2.Location = l2;
         }
+
 
         //Panel 1
         private void createToolStripMenuItem_Click(object sender, EventArgs e)
@@ -74,6 +65,7 @@ namespace capstone_ui
                 pictureBox3.ImageLocation = comparisons[index].name + ".bmp";
             }
         }
+
 
         //
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
@@ -128,6 +120,7 @@ namespace capstone_ui
             pictureBox2.ImageLocation = "";
         }
 
+
         //Panel 2
         private void Form1_SizeChanged(object sender, EventArgs e)
         {
@@ -150,51 +143,95 @@ namespace capstone_ui
             chart2.Location = c2;
         }
 
+
         //
         public void treeView1_Update()
         {
+            //Clear Treeview
             treeView1.Nodes.Clear();
+
+            //Loop through comparisons list
             for (int i = 0; i < comparisons.Count; i++)
             {
+                //
                 TreeNode[] nodes = new TreeNode[2];
+
+                //
                 nodes[0] = new TreeNode(comparisons[i].image1.name);
+
+                //
                 nodes[1] = new TreeNode(comparisons[i].image2.name);
+
+                //
                 TreeNode node = new TreeNode(comparisons[i].name, nodes);
+
+                //
                 treeView1.Nodes.Add(node);
             }
         }
 
+
         //
         public static void generate_data(int index)
         {
+            //Create Instance of Process Object
             Process process = new Process();
 
+            //Specify Program to run
             process.StartInfo.FileName = "capstone_test.exe";
+
+            //Hide window when processing data
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+            //Execute Program as a Shell Program
             process.StartInfo.UseShellExecute = true;
 
-            string args = " " +
-                "\"" + comparisons[index].image1.path + "\" " +
+            //Set Arguments for process
+            process.StartInfo.Arguments = " " +
+                
+                //Input Jpeg Image Path
                 "\"" + comparisons[index].image2.path + "\" " +
+                
+                //Input Bitmap Image Path
+                "\"" + comparisons[index].image1.path + "\" " +
+                
+                //Output jpeg CSV Path
                 "\"" + comparisons[index].name + ".jpg.csv\" " +
+                
+                //Output bitmap CSV Path
                 "\"" + comparisons[index].name + ".bmp.csv\" " +
+                
+                //Output Difference Map Bitmap Path
                 "\"" + comparisons[index].name + ".bmp\"";
 
-            process.StartInfo.Arguments = args;
-
+            //Start Process
             process.Start();
-            process.WaitForExit(500);
+
+            //Wait until process has exited
+            process.WaitForExit();
+
+            //If process exit code is one
+            if (process.ExitCode == 1)
+                //Alert user to Data Generation Failer
+                MessageBox.Show("Comparison Data Generation Failed", "ERROR");
         }
+
 
         //
         public void deleteFiles(int index)
         {
-            File.Delete(comparisons[treeView1.SelectedNode.Index].name + ".jpg.csv");
-            File.Delete(comparisons[treeView1.SelectedNode.Index].name + ".bmp.csv");
-            File.Delete(comparisons[treeView1.SelectedNode.Index].name + ".bmp");
+            File.Delete(comparisons[index].name + ".jpg.csv");
+            File.Delete(comparisons[index].name + ".bmp.csv");
+            File.Delete(comparisons[index].name + ".bmp");
         }
 
+
+        ////////////////////////////////////
+        // updateCharts
         //
+        // Type:
+        //      
+        ////////////////////////////////////
         public void updateCharts(int index)
         {
             FileInfo jpgInfo = new FileInfo(comparisons[index].name + ".jpg.csv");
@@ -207,6 +244,9 @@ namespace capstone_ui
 
             jpgCSV.Read(jpgCharBuffer, 0, (int)jpgInfo.Length);
             bmpCSV.Read(bmpCharBuffer, 0, (int)bmpInfo.Length);
+
+            jpgCSV.Close();
+            bmpCSV.Close();
 
             int[] jpgIntBuffer = new int[1024];
             int[] bmpIntBuffer = new int[1024];
@@ -264,7 +304,7 @@ namespace capstone_ui
 
             while (index < 1024)
             {
-                switch(index)
+                switch (index)
                 {
                     case 255:
                         chart1.Series.Add(jpgSeries);
@@ -336,15 +376,32 @@ namespace capstone_ui
             chart1.Series.Add(jpgSeries);
             chart2.Series.Add(bmpSeries);
 
-            if(chart2.ChartAreas[0].AxisY.Maximum > chart1.ChartAreas[0].AxisY.Maximum)
+            if (chart2.ChartAreas[0].AxisY.Maximum > chart1.ChartAreas[0].AxisY.Maximum)
+            {
                 chart2.ChartAreas[0].AxisY.Maximum = chart1.ChartAreas[0].AxisY.Maximum;
-            
-            else if(chart2.ChartAreas[0].AxisY.Maximum < chart1.ChartAreas[0].AxisY.Maximum)
+                
+            }
+            else if (chart2.ChartAreas[0].AxisY.Maximum < chart1.ChartAreas[0].AxisY.Maximum)
+            {
                 chart1.ChartAreas[0].AxisY.Maximum = chart2.ChartAreas[0].AxisY.Maximum;
-            
+            }
+
         }
 
+
+        ////////////////////////////////////
+        // treeView1_AfterSelect
         //
+        // Type:
+        //      Event Handler
+        //
+        // Arguments:
+        //           sender : object
+        //           e      : TreeViewEventArgs
+        //
+        // Return:
+        //        void
+        ////////////////////////////////////
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (treeView1.SelectedNode != null)
@@ -400,7 +457,20 @@ namespace capstone_ui
             }
         }
 
+
+        ///////////////////////////////////
+        // tabPage3_Click
         //
+        // Type:
+        //      Event Handler
+        //
+        // Arguments:
+        //           sender : object
+        //           e      : EventArgs
+        //
+        // Return:
+        //       void
+        ///////////////////////////////////
         private void tabPage3_Click(object sender, EventArgs e)
         {
             int index = -1;
@@ -418,19 +488,56 @@ namespace capstone_ui
                 pictureBox3.Name = comparisons[index].name + ".bmp";
         }
 
+
+        ///////////////////////////
+        // Form1_FormClosed
+        // 
+        // Type:
+        //      Event Handler
         //
+        // Arguments:
+        //           sender : object
+        //           e      : FormClosedEventArgs
+        //
+        // Return:
+        //        void
+        ///////////////////////////
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             
         }
 
+
+        ///////////////////////////////
+        // tabControl1_SelectedIndexChanged
+        // Type:
+        //      Event Handler
         //
+        // Arguments:
+        //           sender : object
+        //           e      : EventArgs
+        //
+        // Return:
+        //        void
+        ////////////////////////////////
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             
         }
         
+
+        ///////////////////////////
+        // reToolStripMenuItem_CheckedChanged
+        // Type:
+        //      Event Handler
         //
+        // Arguments:
+        //           sender : object
+        //           e      : EventArgs
+        //
+        // Returns:
+        //         void
+        ///////////////////////
         private void redToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             if (redToolStripMenuItem.Checked)
@@ -444,6 +551,7 @@ namespace capstone_ui
                 chart2.Series[0].Enabled = false;
             }
         }
+
 
         //
         private void greenToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -460,6 +568,7 @@ namespace capstone_ui
             }
         }
 
+
         //
         private void blueToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
@@ -474,6 +583,7 @@ namespace capstone_ui
                 chart2.Series[2].Enabled = false;
             }
         }
+
 
         //
         private void averageToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -490,6 +600,7 @@ namespace capstone_ui
             }
         }
 
+
         //
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -497,6 +608,46 @@ namespace capstone_ui
             {
                 deleteFiles(i);
             }
+        }
+
+
+        //
+        private void splitContainer1_Panel2_SizeChanged(object sender, EventArgs e)
+        {
+            tabControl1.Width = splitContainer1.Panel2.Width;
+            tabControl1.Height = splitContainer1.Panel2.Height;
+        }
+
+
+        //
+        private void tabPage2_SizeChanged(object sender, EventArgs e)
+        {
+            //Set Chart One Width to page width
+            chart1.Width = tabPage2.Width;
+
+            //Set chart one height to half page height minus half bottom menustrip height
+            chart1.Height = (tabPage2.Height >> 1) - (menuStrip4.Height >> 1);
+
+            //Set Chart 2 width  to page width
+            chart2.Width = tabPage2.Width;
+
+            //Set Chart height to half page minus half menustrip4 height
+            chart2.Height = (tabPage2.Height >> 1) - (menuStrip4.Height >> 1);
+
+            //Create new instance of point object
+            Point c1 = new Point();
+
+            //Assign 0 to 
+            c1.X = 0;
+            c1.Y = 0;
+
+            chart1.Location = c1;
+
+            Point c2 = new Point();
+            c2.X = 0;
+            c2.Y = (tabPage2.Height >> 1) - (menuStrip4.Height >> 1);
+
+            chart2.Location = c2;
         }
     }
 }
