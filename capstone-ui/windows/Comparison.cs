@@ -13,7 +13,7 @@ namespace capstone_ui.windows
 
         public int Index = -1;
 
-        public Comparison(int I)
+        public Comparison(int I = -1, string path1 = "", string path2 = "")
         {
             InitializeComponent();
 
@@ -74,7 +74,11 @@ namespace capstone_ui.windows
             }
             else
             {
-
+                if (path1 != "" && path2 != "")
+                {
+                    textBox2.Text = path1;
+                    textBox3.Text = path2;
+                }
             }
         }
 
@@ -82,9 +86,12 @@ namespace capstone_ui.windows
         {
             OpenFileDialog open = new OpenFileDialog();
 
+            open.CheckFileExists = true;
+
             //
             if (open.ShowDialog() == DialogResult.OK)
             {
+
                 image1.path = open.FileName;
                 if (properFormats(0))
                 {
@@ -105,6 +112,8 @@ namespace capstone_ui.windows
             if (radioButton1.Checked)
             {
                 OpenFileDialog open = new OpenFileDialog();
+
+                open.CheckFileExists = true;
 
                 //
                 if (open.ShowDialog() == DialogResult.OK)
@@ -127,17 +136,64 @@ namespace capstone_ui.windows
             {
                 Generate gen = new Generate(textBox2.Text);
 
-                if (gen.ShowDialog() == DialogResult.OK)
+                if (File.Exists(image1.path) && gen.ShowDialog() == DialogResult.OK)
                 {
-                    image2.path = gen.filePath;
+                    image2.path = gen.saveFilePath;
 
-                    textBox3.Text = gen.filePath;
+                    textBox3.Text = gen.saveFilePath;
 
                     Process process = new Process();
 
                     process.StartInfo.FileName = "capstoneCompression.exe";
 
-                    process.StartInfo.Arguments = "";
+                    process.StartInfo.Arguments = "\"" + image1.path + "\" ";
+
+                    switch(gen.subSampling)
+                    {
+                        case 0:
+                            process.StartInfo.Arguments += "444 ";
+                            break;
+
+                        case 1:
+                            process.StartInfo.Arguments += "440 ";
+                            break;
+
+                        case 2:
+                            process.StartInfo.Arguments += "422 ";
+                            break;
+
+                        case 3:
+                            process.StartInfo.Arguments += "420 ";
+                            break;
+
+                        case 4:
+                            process.StartInfo.Arguments += "411 ";
+                            break;
+
+                        default:
+                            process.StartInfo.Arguments += "gra ";
+                            break;
+                    }
+
+                    if (gen.quatizationMatrixPath == "")
+                    {
+                        process.StartInfo.Arguments += "-i ";
+                        process.StartInfo.Arguments += gen.qualityIndex + " ";
+                    }
+                    else
+                    {
+                        process.StartInfo.Arguments += "-c ";
+                        process.StartInfo.Arguments += "\"" + gen.quatizationMatrixPath + "\" ";
+                    }
+
+                    process.StartInfo.Arguments += "\"" + image2.path + "\" ";
+
+                    process.Start();
+
+                    process.WaitForExit();
+
+                    if (process.ExitCode == 1)
+                        MessageBox.Show("An error occured when generating jpg", "ERROR");
                 }
             }
         }
@@ -164,7 +220,10 @@ namespace capstone_ui.windows
                 {
                     bool filesDeleted = false;
 
-                    if (Form1.comparisons[Index].image1 != image1 || Form1.comparisons[Index].image2 != image2)
+                    if ((Form1.comparisons[Index].image1 != image1 || Form1.comparisons[Index].image2 != image2) &&
+                        (File.Exists(Form1.comparisons[Index].name + ".jpg.csv") || 
+                        File.Exists(Form1.comparisons[Index].name + ".bmp.csv")||
+                        File.Exists(Form1.comparisons[Index].name + ".bmp")))
                     {
                         File.Delete(Form1.comparisons[Index].name + ".jpg.csv");
                         File.Delete(Form1.comparisons[Index].name + ".bmp.csv");
